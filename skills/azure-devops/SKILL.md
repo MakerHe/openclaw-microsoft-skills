@@ -9,16 +9,34 @@ Interact with Azure DevOps services via REST API using curl commands.
 
 ## Authentication Setup
 
-Three environment variables are required:
+Two authentication methods are supported. PAT is checked first; if unavailable, Device Code Flow is used.
+
+### Option 1: PAT (Personal Access Token)
+
+Required environment variables:
 
 - `AZURE_DEVOPS_PAT` — Personal Access Token
 - `AZURE_DEVOPS_ORG` — Organization name (e.g., `myorg`)
 - `AZURE_DEVOPS_PROJECT` — Default project name
 
-All curl commands use PAT auth via base64-encoded `:$AZURE_DEVOPS_PAT`:
-
 ```bash
 curl -s -u ":$AZURE_DEVOPS_PAT" \
+  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/projects?api-version=7.1"
+```
+
+### Option 2: Device Code Flow (OAuth2)
+
+Required environment variables:
+
+- `AZURE_DEVOPS_CLIENT_ID` — Application (client) ID from Microsoft Entra ID app registration
+- `AZURE_DEVOPS_TENANT_ID` — Tenant ID (default: `organizations` for multi-tenant)
+- `AZURE_DEVOPS_ORG` — Organization name
+- `AZURE_DEVOPS_PROJECT` — Default project name
+
+The user authenticates via browser at `https://microsoft.com/devicelogin`. See `references/device-code-auth.md` for the full flow.
+
+```bash
+curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
   "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/projects?api-version=7.1"
 ```
 
@@ -43,6 +61,7 @@ Route the user's request to the appropriate reference file:
 | Topic | Reference |
 |-------|-----------|
 | Auth, base URLs, API versioning | `references/auth-and-setup.md` |
+| Device Code Flow (OAuth2) authentication | `references/device-code-auth.md` |
 | Work items (create, query, update, WIQL) | `references/work-items.md` |
 | Git repos, pull requests, branches, commits | `references/git-repos.md` |
 | YAML pipelines (runs, definitions) | `references/pipelines.md` |
@@ -66,10 +85,11 @@ Route the user's request to the appropriate reference file:
 
 ## Instructions
 
-1. Verify `AZURE_DEVOPS_PAT`, `AZURE_DEVOPS_ORG`, and `AZURE_DEVOPS_PROJECT` are set before making any API calls.
-2. Read the appropriate reference file for the endpoint patterns.
-3. Execute curl commands via the Bash tool, substituting environment variables.
-4. Parse JSON responses with `jq` when extracting specific fields.
-5. For paginated results, follow `continuationToken` or `x-ms-continuationtoken` headers.
-6. Always include `api-version=7.1` in query parameters.
-7. For POST/PUT/PATCH, set `-H "Content-Type: application/json"` (or `application/json-patch+json` for work item updates).
+1. **Detect authentication method**: Check if `AZURE_DEVOPS_PAT` is set — if yes, use PAT (Basic auth). Otherwise, check if `AZURE_DEVOPS_CLIENT_ID` is set — if yes, use Device Code Flow (Bearer token). If neither is set, inform the user and stop.
+2. Verify `AZURE_DEVOPS_ORG` and `AZURE_DEVOPS_PROJECT` are set before making any API calls.
+3. Read the appropriate reference file for the endpoint patterns.
+4. Execute curl commands via the Bash tool, substituting environment variables. Use `-u ":$AZURE_DEVOPS_PAT"` for PAT auth or `-H "Authorization: Bearer $ACCESS_TOKEN"` for OAuth.
+5. Parse JSON responses with `jq` when extracting specific fields.
+6. For paginated results, follow `continuationToken` or `x-ms-continuationtoken` headers.
+7. Always include `api-version=7.1` in query parameters.
+8. For POST/PUT/PATCH, set `-H "Content-Type: application/json"` (or `application/json-patch+json` for work item updates).

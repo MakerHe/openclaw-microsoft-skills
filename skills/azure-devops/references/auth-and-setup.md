@@ -24,6 +24,14 @@ curl -s -H "Authorization: Basic $B64_PAT" \
   "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/projects?api-version=7.1"
 ```
 
+## Device Code Flow (OAuth2)
+
+For OAuth-based authentication using Device Code Flow, see [`references/device-code-auth.md`](device-code-auth.md). This method is recommended when:
+
+- PAT management is not desired
+- Organization requires MFA
+- You prefer automatic token refresh over manual PAT rotation
+
 ## Base URLs
 
 | Service | Base URL |
