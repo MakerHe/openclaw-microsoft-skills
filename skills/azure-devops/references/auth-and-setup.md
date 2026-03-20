@@ -26,7 +26,7 @@ curl -s -H "Authorization: Basic $B64_PAT" \
 
 ## Device Code Flow (OAuth2)
 
-For OAuth-based authentication using Device Code Flow, see [`references/device-code-auth.md`](device-code-auth.md). This method is recommended when:
+For OAuth-based authentication using Device Code Flow, see the shared reference: [`../../shared/auth/device-code-flow.md`](../../shared/auth/device-code-flow.md). This method is recommended when:
 
 - PAT management is not desired
 - Organization requires MFA

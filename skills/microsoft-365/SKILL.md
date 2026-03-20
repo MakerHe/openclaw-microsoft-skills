@@ -13,8 +13,10 @@ This skill uses Device Code Flow (OAuth2) for authentication. The user completes
 
 Required environment variables:
 
-- `M365_CLIENT_ID` — Application (client) ID from Microsoft Entra ID app registration
-- `M365_TENANT_ID` — Tenant ID (default: `common` for multi-tenant)
+- `MICROSOFT_CLIENT_ID` — Application (client) ID from Microsoft Entra ID app registration
+- `MICROSOFT_TENANT_ID` — Tenant ID (default: `common` for multi-tenant)
+
+See `../shared/auth/device-code-flow.md` for the full Device Code Flow steps.
 
 ```bash
 curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
@@ -49,8 +51,8 @@ Route the user's request to the appropriate reference file:
 
 ## Instructions
 
-1. **Check authentication**: Verify `M365_CLIENT_ID` is set. If not, inform the user and stop.
-2. **Authenticate**: Execute Device Code Flow to obtain an access token (see `references/auth-and-setup.md`).
+1. **Check authentication**: Verify `MICROSOFT_CLIENT_ID` is set. If not, inform the user and stop.
+2. **Authenticate**: Execute Device Code Flow to obtain an access token (see `../shared/auth/device-code-flow.md` and `references/auth-and-setup.md`).
 3. **Route**: Read the appropriate reference file based on the user's request.
 4. **Execute**: Use `curl` with `-H "Authorization: Bearer $ACCESS_TOKEN"` to call Graph API endpoints.
 5. **Parse**: Use `jq` to extract specific fields from JSON responses.
