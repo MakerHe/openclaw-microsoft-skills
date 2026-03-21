@@ -1,20 +1,54 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# OpenClaw Customize Skills
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+Custom AgentSkills for OpenClaw, providing Microsoft 365 and Azure DevOps integration via REST APIs.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## Skills
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+| Skill | Description |
+|-------|-------------|
+| **microsoft-365** | Microsoft Graph API — mail, calendar, OneDrive, Teams, OneNote, To Do, contacts, users, groups, SharePoint |
+| **azure-devops** | Azure DevOps REST API — work items, repos, pull requests, pipelines, builds, releases, test plans, artifacts, wikis, boards |
+| **shared/auth** | Shared Device Code Flow (OAuth2) authentication module used by both skills |
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Authentication
+
+Both skills authenticate via **Microsoft Entra ID Device Code Flow**. A single user login can provide tokens for both Microsoft Graph and Azure DevOps.
+
+### Required Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MICROSOFT_CLIENT_ID` | Yes | Application (client) ID from Entra ID app registration |
+| `MICROSOFT_TENANT_ID` | No | Tenant ID (default: `common`) |
+| `MICROSOFT_CLIENT_SECRET` | No | Client secret (only for confidential client apps) |
+| `AZURE_DEVOPS_ORG` | For AZDO | Azure DevOps organization name |
+| `AZURE_DEVOPS_PROJECT` | For AZDO | Default Azure DevOps project |
+
+### How It Works
+
+1. Authenticate once with Device Code Flow (scope: `https://graph.microsoft.com/.default offline_access`)
+2. Receive an access token (Graph) + refresh token
+3. Use the refresh token to silently acquire an Azure DevOps token — **no second login required**
+
+See `skills/shared/auth/device-code-flow.md` for the full flow.
+
+## Installation
+
+Copy the `skills/` directory into your OpenClaw workspace:
+
+```
+~/.openclaw/workspace/skills/
+├── azure-devops/
+│   ├── SKILL.md
+│   └── references/
+├── microsoft-365/
+│   ├── SKILL.md
+│   └── references/
+└── shared/
+    └── auth/
+        └── device-code-flow.md
+```
+
+## License
+
+Internal use only.
