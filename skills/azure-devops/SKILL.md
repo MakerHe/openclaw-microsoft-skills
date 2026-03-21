@@ -30,10 +30,13 @@ Required environment variables:
 
 - `MICROSOFT_CLIENT_ID` — Application (client) ID from Microsoft Entra ID app registration
 - `MICROSOFT_TENANT_ID` — Tenant ID (default: `common`)
+- `MICROSOFT_CLIENT_SECRET` — (Optional) Client secret, if using a confidential client app registration
 - `AZURE_DEVOPS_ORG` — Organization name
 - `AZURE_DEVOPS_PROJECT` — Default project name
 
 The user authenticates via browser at `https://microsoft.com/devicelogin`. See `../shared/auth/device-code-flow.md` for the full flow.
+
+**Important:** Use scope `499b84ac-1321-427f-aa17-267ca6975798/.default offline_access` when requesting the device code for Azure DevOps. If already authenticated for M365, use the refresh token to acquire an Azure DevOps token without a second login (see shared auth doc, Step 5).
 
 ```bash
 curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
@@ -85,7 +88,7 @@ Route the user's request to the appropriate reference file:
 
 ## Instructions
 
-1. **Detect authentication method**: Check if `AZURE_DEVOPS_PAT` is set — if yes, use PAT (Basic auth). Otherwise, check if `MICROSOFT_CLIENT_ID` is set — if yes, use Device Code Flow (Bearer token). If neither is set, inform the user and stop.
+1. **Detect authentication method**: Check if `AZURE_DEVOPS_PAT` is set — if yes, use PAT (Basic auth). Otherwise, check if `MICROSOFT_CLIENT_ID` is set — if yes, use Device Code Flow (Bearer token). If `MICROSOFT_CLIENT_SECRET` is set, include it in token requests. If neither PAT nor CLIENT_ID is set, inform the user and stop.
 2. Verify `AZURE_DEVOPS_ORG` and `AZURE_DEVOPS_PROJECT` are set before making any API calls.
 3. Read the appropriate reference file for the endpoint patterns.
 4. Execute curl commands via the Bash tool, substituting environment variables. Use `-u ":$AZURE_DEVOPS_PAT"` for PAT auth or `-H "Authorization: Bearer $ACCESS_TOKEN"` for OAuth.

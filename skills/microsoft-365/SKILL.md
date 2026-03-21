@@ -15,8 +15,11 @@ Required environment variables:
 
 - `MICROSOFT_CLIENT_ID` — Application (client) ID from Microsoft Entra ID app registration
 - `MICROSOFT_TENANT_ID` — Tenant ID (default: `common` for multi-tenant)
+- `MICROSOFT_CLIENT_SECRET` — (Optional) Client secret, if using a confidential client app registration
 
 See `../shared/auth/device-code-flow.md` for the full Device Code Flow steps.
+
+**Important:** Use scope `https://graph.microsoft.com/.default offline_access` when requesting the device code. Include `offline_access` to receive a refresh token. If both M365 and Azure DevOps are needed, authenticate once and use the refresh token to acquire a token for the other resource (see shared auth doc).
 
 ```bash
 curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
