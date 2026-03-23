@@ -1,142 +1,46 @@
-# Teams API
+# Teams
 
-Base path: `https://graph.microsoft.com/v1.0`
+Service: `client.teams` — Permissions: `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Send`, `ChatMessage.Send`
 
-Permissions: `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Send`, `ChatMessage.Send`
+## Teams
 
-## List Joined Teams
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/joinedTeams" | jq '.value[] | {id, displayName, description}'
+```python
+result = client.teams.list_joined_teams()
+result = client.teams.get_team(team_id)
 ```
 
-## Get a Team
+## Channels
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}" | jq '{displayName, description, isArchived}'
-```
-
-## List Channels
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/channels" | jq '.value[] | {id, displayName, membershipType}'
-```
-
-## Get a Channel
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/channels/{channel-id}"
-```
-
-## Create a Channel
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/channels" \
-  -d '{
-    "displayName": "New Channel",
-    "description": "Channel description",
-    "membershipType": "standard"
-  }'
+```python
+result = client.teams.list_channels(team_id)
+result = client.teams.get_channel(team_id, channel_id)
+result = client.teams.create_channel(
+    team_id, display_name="New Channel",
+    description="Channel description", membership_type="standard",
+)
 ```
 
 Membership types: `standard`, `private`, `shared`.
 
-## Send a Channel Message
+## Channel Messages
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/channels/{channel-id}/messages" \
-  -d '{
-    "body": {
-      "content": "Hello from Graph API!"
-    }
-  }'
+```python
+result = client.teams.send_channel_message(team_id, channel_id, content="Hello!", content_type="html")
+result = client.teams.reply_to_channel_message(team_id, channel_id, message_id, content="Reply")
+result = client.teams.list_channel_messages(team_id, channel_id, top=20)
 ```
 
-With HTML content:
+## Members
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/channels/{channel-id}/messages" \
-  -d '{
-    "body": {
-      "contentType": "html",
-      "content": "<h1>Title</h1><p>Rich content here</p>"
-    }
-  }'
+```python
+result = client.teams.list_members(team_id)
+result = client.teams.add_member(team_id, user_id, roles=["member"])
 ```
 
-## Reply to a Channel Message
+## Chats
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/channels/{channel-id}/messages/{message-id}/replies" \
-  -d '{
-    "body": {
-      "content": "This is a reply"
-    }
-  }'
-```
-
-## List Channel Messages
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/channels/{channel-id}/messages?\$top=20" | jq '.value[] | {id, from: .from.user.displayName, body: .body.content, createdDateTime}'
-```
-
-## List Team Members
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/members" | jq '.value[] | {displayName, roles, email: .email}'
-```
-
-## Add a Team Member
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/teams/{team-id}/members" \
-  -d '{
-    "@odata.type": "#microsoft.graph.aadUserConversationMember",
-    "roles": ["member"],
-    "user@odata.bind": "https://graph.microsoft.com/v1.0/users/{user-id}"
-  }'
-```
-
-## List Chats
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/chats" | jq '.value[] | {id, topic, chatType}'
-```
-
-## Send a Chat Message
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/chats/{chat-id}/messages" \
-  -d '{
-    "body": {
-      "content": "Hello in chat!"
-    }
-  }'
-```
-
-## List Chat Messages
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/chats/{chat-id}/messages?\$top=20" | jq '.value[] | {from: .from.user.displayName, body: .body.content, createdDateTime}'
+```python
+result = client.teams.list_chats()
+result = client.teams.send_chat_message(chat_id, content="Hello in chat!")
+result = client.teams.list_chat_messages(chat_id, top=20)
 ```

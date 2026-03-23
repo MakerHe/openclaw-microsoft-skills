@@ -1,111 +1,34 @@
-# Release Management API
+# Releases
 
-Base: `https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release`
+Service: `client.releases`
 
-**Note**: Release Management uses the `vsrm.dev.azure.com` host.
+## Definitions
 
-## List Release Definitions
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/definitions?api-version=7.1"
+```python
+result = client.releases.list_definitions()
+result = client.releases.get_definition(definition_id)
 ```
 
-## Get a Release Definition
+## Create / List / Get
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/definitions/{definitionId}?api-version=7.1"
+```python
+result = client.releases.create(definition_id, description="Release v1.0", artifacts=[{"alias": "drop", "instanceReference": {"id": "123"}}])
+result = client.releases.list(definition_id=definition_id, top=10)
+result = client.releases.get(release_id)
 ```
 
-## Create a Release
+## Deploy / Approvals
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases?api-version=7.1" \
-  -d '{
-    "definitionId": {definitionId},
-    "description": "Release via API",
-    "artifacts": [
-      {
-        "alias": "{artifactAlias}",
-        "instanceReference": {
-          "id": "{buildId}",
-          "name": null
-        }
-      }
-    ]
-  }'
+```python
+result = client.releases.deploy(release_id, environment_id, comment="Deploying to prod")
+result = client.releases.list_approvals(status_filter="pending")
+result = client.releases.approve(approval_id, comments="Approved")
 ```
 
-## List Releases
+## Tasks / Gates / Delete
 
-```bash
-# Recent releases
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases?api-version=7.1&\$top=20"
-
-# By definition
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases?definitionId={definitionId}&api-version=7.1"
-```
-
-## Get a Release
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases/{releaseId}?api-version=7.1"
-```
-
-## Update Release Environment (Deploy)
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases/{releaseId}/environments/{environmentId}?api-version=7.1" \
-  -d '{
-    "status": "inProgress",
-    "comment": "Deploying via API"
-  }'
-```
-
-Environment status: `undefined`, `notStarted`, `inProgress`, `succeeded`, `canceled`, `rejected`, `queued`, `scheduled`, `partiallySucceeded`.
-
-## Approvals
-
-```bash
-# List pending approvals
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/approvals?statusFilter=pending&api-version=7.1"
-
-# Approve
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/approvals/{approvalId}?api-version=7.1" \
-  -d '{"status": "approved", "comments": "Approved via API"}'
-```
-
-## Release Logs
-
-```bash
-# Get logs for an environment
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases/{releaseId}/environments/{environmentId}/attempts/{attemptId}/tasks?api-version=7.1"
-```
-
-## Delete a Release
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X DELETE \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases/{releaseId}?api-version=7.1"
-```
-
-## Gates
-
-```bash
-# List gates for an environment
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/release/releases/{releaseId}/environments/{environmentId}/gates?api-version=7.1-preview.1"
+```python
+result = client.releases.get_tasks(release_id, environment_id, attempt=1)
+result = client.releases.list_gates(release_id, environment_id)
+client.releases.delete(release_id)
 ```

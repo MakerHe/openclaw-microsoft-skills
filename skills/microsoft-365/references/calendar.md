@@ -1,162 +1,97 @@
-# Calendar API
+# Calendar
 
-Base path: `https://graph.microsoft.com/v1.0/me`
-
-Permissions: `Calendars.ReadWrite`
+Service: `client.calendar` — Permissions: `Calendars.ReadWrite`
 
 ## List Events
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/events?\$top=10&\$orderby=start/dateTime%20desc" | jq '.value[] | {subject, start: .start.dateTime, end: .end.dateTime, location: .location.displayName}'
+```python
+result = client.calendar.list_events(top=10, order_by="start/dateTime desc")
 ```
 
-## List Events in Date Range (Calendar View)
+## Calendar View (Date Range)
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2025-01-01T00:00:00Z&endDateTime=2025-01-31T23:59:59Z&\$top=50" | jq '.value[] | {subject, start: .start.dateTime, end: .end.dateTime}'
+```python
+result = client.calendar.list_calendar_view(
+    start_date_time="2025-01-01T00:00:00Z",
+    end_date_time="2025-01-31T23:59:59Z",
+)
 ```
 
-## Get an Event
+## Get / Delete an Event
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/events/{event-id}" | jq '{subject, body: .body.content, start, end, location, attendees}'
+```python
+result = client.calendar.get_event(event_id)
+result = client.calendar.delete_event(event_id)
 ```
 
 ## Create an Event
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/events" \
-  -d '{
-    "subject": "Team Meeting",
-    "body": {"contentType": "HTML", "content": "<p>Agenda items here</p>"},
-    "start": {"dateTime": "2025-06-15T14:00:00", "timeZone": "UTC"},
-    "end": {"dateTime": "2025-06-15T15:00:00", "timeZone": "UTC"},
-    "location": {"displayName": "Conference Room A"},
-    "attendees": [
-      {
-        "emailAddress": {"address": "colleague@example.com", "name": "Colleague"},
-        "type": "required"
-      }
-    ]
-  }'
-```
+```python
+result = client.calendar.create_event(
+    subject="Team Meeting",
+    start="2025-06-15T14:00:00",
+    end="2025-06-15T15:00:00",
+    timezone="UTC",
+    body="<p>Agenda items</p>",
+    attendees=["colleague@example.com"],
+    location="Conference Room A",
+    is_online=False,
+)
 
-## Create an All-Day Event
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/events" \
-  -d '{
-    "subject": "Company Holiday",
-    "isAllDay": true,
-    "start": {"dateTime": "2025-12-25T00:00:00", "timeZone": "UTC"},
-    "end": {"dateTime": "2025-12-26T00:00:00", "timeZone": "UTC"}
-  }'
-```
-
-## Create a Recurring Event
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/events" \
-  -d '{
-    "subject": "Weekly Standup",
-    "start": {"dateTime": "2025-06-16T09:00:00", "timeZone": "UTC"},
-    "end": {"dateTime": "2025-06-16T09:30:00", "timeZone": "UTC"},
-    "recurrence": {
-      "pattern": {"type": "weekly", "interval": 1, "daysOfWeek": ["monday"]},
-      "range": {"type": "endDate", "startDate": "2025-06-16", "endDate": "2025-12-31"}
-    }
-  }'
+# Recurring event
+result = client.calendar.create_event(
+    subject="Weekly Standup",
+    start="2025-06-16T09:00:00",
+    end="2025-06-16T09:30:00",
+    recurrence={
+        "pattern": {"type": "weekly", "interval": 1, "daysOfWeek": ["monday"]},
+        "range": {"type": "endDate", "startDate": "2025-06-16", "endDate": "2025-12-31"},
+    },
+)
 ```
 
 ## Update an Event
 
-```bash
-curl -s -X PATCH -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/events/{event-id}" \
-  -d '{
-    "subject": "Updated Meeting Title",
-    "location": {"displayName": "Conference Room B"}
-  }'
+```python
+result = client.calendar.update_event(event_id, updates={
+    "subject": "Updated Title",
+    "location": {"displayName": "Room B"},
+})
 ```
 
-## Delete an Event
+## Accept / Decline / Tentatively Accept
 
-```bash
-curl -s -X DELETE -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/events/{event-id}"
+```python
+result = client.calendar.accept(event_id, send_response=True)
+result = client.calendar.decline(event_id, send_response=True)
+result = client.calendar.tentatively_accept(event_id, send_response=True)
 ```
 
-## Accept/Decline/Tentatively Accept an Event
+## Free/Busy Schedule
 
-```bash
-# Accept
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/events/{event-id}/accept" \
-  -d '{"sendResponse": true}'
-
-# Decline
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/events/{event-id}/decline" \
-  -d '{"sendResponse": true}'
-
-# Tentatively accept
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/events/{event-id}/tentativelyAccept" \
-  -d '{"sendResponse": true}'
-```
-
-## Get Free/Busy Schedule
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/calendar/getSchedule" \
-  -d '{
-    "schedules": ["user1@example.com", "user2@example.com"],
-    "startTime": {"dateTime": "2025-06-15T09:00:00", "timeZone": "UTC"},
-    "endTime": {"dateTime": "2025-06-15T18:00:00", "timeZone": "UTC"},
-    "availabilityViewInterval": 30
-  }'
+```python
+result = client.calendar.get_schedule(
+    schedules=["user1@example.com", "user2@example.com"],
+    start="2025-06-15T09:00:00",
+    end="2025-06-15T18:00:00",
+    timezone="UTC",
+    availability_view_interval=30,
+)
 ```
 
 ## List Calendars
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/calendars" | jq '.value[] | {id, name, color}'
+```python
+result = client.calendar.list_calendars()
 ```
 
 ## Find Meeting Times
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/findMeetingTimes" \
-  -d '{
-    "attendees": [
-      {"emailAddress": {"address": "colleague@example.com"}, "type": "required"}
-    ],
-    "timeConstraint": {
-      "timeslots": [
-        {
-          "start": {"dateTime": "2025-06-16T09:00:00", "timeZone": "UTC"},
-          "end": {"dateTime": "2025-06-16T18:00:00", "timeZone": "UTC"}
-        }
-      ]
-    },
-    "meetingDuration": "PT1H"
-  }'
+```python
+result = client.calendar.find_meeting_times(
+    attendees=["colleague@example.com"],
+    duration_minutes=60,
+    start="2025-06-16T09:00:00",
+    end="2025-06-16T18:00:00",
+)
 ```

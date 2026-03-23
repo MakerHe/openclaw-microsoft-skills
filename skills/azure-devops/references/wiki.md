@@ -1,108 +1,28 @@
-# Wiki API
+# Wiki
 
-Base: `https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki`
+Service: `client.wiki`
 
 ## Wikis
 
-### List Wikis
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis?api-version=7.1"
-```
-
-### Get a Wiki
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis/{wikiIdentifier}?api-version=7.1"
-```
-
-### Create a Project Wiki
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis?api-version=7.1" \
-  -d '{
-    "name": "my-wiki",
-    "type": "projectWiki"
-  }'
-```
-
-### Create a Code Wiki (from repo)
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis?api-version=7.1" \
-  -d '{
-    "name": "code-wiki",
-    "type": "codeWiki",
-    "version": {"version": "main"},
-    "repositoryId": "{repoId}",
-    "mappedPath": "/docs"
-  }'
+```python
+result = client.wiki.list_wikis()
+result = client.wiki.get_wiki(wiki_id)
+result = client.wiki.create_project_wiki("Project Wiki")
+result = client.wiki.create_code_wiki(name="Code Wiki", repo_id="repo-guid", branch="main", mapped_path="/docs")
 ```
 
 ## Pages
 
-### Get a Page
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis/{wikiIdentifier}/pages?path=/Home&includeContent=true&api-version=7.1"
+```python
+result = client.wiki.get_page(wiki_id, path="/Home", include_content=True)
+result = client.wiki.create_or_update_page(wiki_id, path="/New Page", content="# Hello\nPage content here.")
+client.wiki.delete_page(wiki_id, path="/Old Page")
 ```
 
-### Create or Update a Page
+## Move / Stats / Attachments
 
-```bash
-# Create (use If-Match: * for create-or-update, omit for create-only)
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PUT \
-  -H "Content-Type: application/json" \
-  -H "If-Match: *" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis/{wikiIdentifier}/pages?path=/NewPage&api-version=7.1" \
-  -d '{"content": "# My Page\n\nPage content in markdown."}'
-```
-
-For updates, use the ETag from the GET response in the `If-Match` header.
-
-### Delete a Page
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X DELETE \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis/{wikiIdentifier}/pages?path=/OldPage&api-version=7.1"
-```
-
-### List Pages (Page Stats)
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis/{wikiIdentifier}/pagesstats?api-version=7.1-preview.1"
-```
-
-## Page Moves
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis/{wikiIdentifier}/pagemoves?api-version=7.1" \
-  -d '{
-    "path": "/OldPath",
-    "newPath": "/NewPath",
-    "newOrder": 0
-  }'
-```
-
-## Attachments
-
-```bash
-# Upload attachment
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PUT \
-  -H "Content-Type: application/octet-stream" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/wiki/wikis/{wikiIdentifier}/attachments?name=image.png&api-version=7.1" \
-  --data-binary @image.png
+```python
+result = client.wiki.move_page(wiki_id, path="/Old Path", new_path="/New Path")
+result = client.wiki.list_page_stats(wiki_id)
+result = client.wiki.upload_attachment(wiki_id, name="image.png", content=image_bytes)
 ```

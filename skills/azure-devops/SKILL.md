@@ -1,70 +1,65 @@
 ---
 name: azure-devops
-description: Interact with Azure DevOps REST APIs - work items, repos, pull requests, pipelines, builds, releases, test plans, artifacts, wikis, boards, and more
+description: Interact with Azure DevOps REST APIs using the openclaw-microsoft-azdo Python SDK — work items, repos, pull requests, pipelines, builds, releases, test plans, artifacts, wikis, boards, and more
 ---
 
 # Azure DevOps Skill
 
-Interact with Azure DevOps services via REST API using curl commands.
+Interact with Azure DevOps services using the `openclaw-microsoft-azdo` Python SDK.
 
-## Authentication Setup
-
-Two authentication methods are supported. PAT is checked first; if unavailable, Device Code Flow is used.
-
-### Option 1: PAT (Personal Access Token)
-
-Required environment variables:
-
-- `AZURE_DEVOPS_PAT` — Personal Access Token
-- `AZURE_DEVOPS_ORG` — Organization name (e.g., `myorg`)
-- `AZURE_DEVOPS_PROJECT` — Default project name
+## Package
 
 ```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/projects?api-version=7.1"
+pip install openclaw-microsoft-azdo
 ```
 
-### Option 2: Device Code Flow (OAuth2)
+## Authentication
 
-Required environment variables:
+Environment variables are stored in `~/.openclaw/.env` (read automatically by `from_env()`). Login tokens are persisted in `~/.openclaw/.credentials/`.
 
-- `MICROSOFT_CLIENT_ID` — Application (client) ID from Microsoft Entra ID app registration
-- `MICROSOFT_TENANT_ID` — Tenant ID (default: `common`)
-- `MICROSOFT_CLIENT_SECRET` — (Optional) Client secret, if using a confidential client app registration
-- `AZURE_DEVOPS_ORG` — Organization name
-- `AZURE_DEVOPS_PROJECT` — Default project name
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AZURE_DEVOPS_ORG` | Yes | Organization name |
+| `AZURE_DEVOPS_PROJECT` | Yes | Default project name |
+| `AZURE_DEVOPS_PAT` | No* | Personal Access Token |
+| `MICROSOFT_CLIENT_ID` | No* | Application (client) ID for OAuth2 |
+| `MICROSOFT_TENANT_ID` | No | Tenant ID (default: `common`) |
+| `MICROSOFT_CLIENT_SECRET` | No | Client secret (optional) |
 
-The user authenticates via browser at `https://microsoft.com/devicelogin`. See `../shared/auth/device-code-flow.md` for the full flow.
+\* Provide either `AZURE_DEVOPS_PAT` or `MICROSOFT_CLIENT_ID`.
 
-**Important:** Use scope `499b84ac-1321-427f-aa17-267ca6975798/.default offline_access` when requesting the device code for Azure DevOps. If already authenticated for M365, use the refresh token to acquire an Azure DevOps token without a second login (see shared auth doc, Step 5).
+### Construct and authenticate
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/projects?api-version=7.1"
+```python
+from openclaw_microsoft_azdo import AzureDevOpsClient
+
+client = AzureDevOpsClient.from_env()
+client.authenticate()   # only needed for OAuth2; skip for PAT
 ```
 
-## API Base URLs
+`from_env()` raises `ValueError` if `AZURE_DEVOPS_ORG`, `AZURE_DEVOPS_PROJECT`, or an auth credential is missing.
 
-| Service | Base URL |
-|---------|----------|
-| Core (projects, teams, work items, git, builds, pipelines) | `https://dev.azure.com/$AZURE_DEVOPS_ORG` |
-| Release Management | `https://vsrm.dev.azure.com/$AZURE_DEVOPS_ORG` |
-| Artifacts / Feeds | `https://feeds.dev.azure.com/$AZURE_DEVOPS_ORG` |
-| Search | `https://almsearch.dev.azure.com/$AZURE_DEVOPS_ORG` |
-| Graph & Identity | `https://vssps.dev.azure.com/$AZURE_DEVOPS_ORG` |
-| Audit | `https://auditservice.dev.azure.com/$AZURE_DEVOPS_ORG` |
-| Extension Management | `https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG` |
+### Auth method selection
 
-All endpoints use `api-version=7.1`.
+| Condition | Auth used |
+|-----------|-----------|
+| `AZURE_DEVOPS_PAT` is set | PAT (Basic auth) — `authenticate()` not needed |
+| `MICROSOFT_CLIENT_ID` is set | Device Code Flow (Bearer) — call `authenticate()` |
+
+### `authenticate()` behaviour (OAuth2 only)
+
+- **Token valid** — prints `"Authentication successful (existing token is still valid)."`.
+- **Silent refresh** — acquires a new token silently from the saved refresh token.
+- **First run** — prints a device-code URL + code; blocks until login completes.
+- **Expired** — clears stale credentials and falls back to device-code flow.
+
+After `authenticate()` the client attaches the correct auth header to every request automatically.
 
 ## Routing
-
-Route the user's request to the appropriate reference file:
 
 | Topic | Reference |
 |-------|-----------|
 | Auth, base URLs, API versioning | `references/auth-and-setup.md` |
-| Device Code Flow (OAuth2) authentication | `../shared/auth/device-code-flow.md` |
 | Work items (create, query, update, WIQL) | `references/work-items.md` |
 | Git repos, pull requests, branches, commits | `references/git-repos.md` |
 | YAML pipelines (runs, definitions) | `references/pipelines.md` |
@@ -88,11 +83,9 @@ Route the user's request to the appropriate reference file:
 
 ## Instructions
 
-1. **Detect authentication method**: Check if `AZURE_DEVOPS_PAT` is set — if yes, use PAT (Basic auth). Otherwise, check if `MICROSOFT_CLIENT_ID` is set — if yes, use Device Code Flow (Bearer token). If `MICROSOFT_CLIENT_SECRET` is set, include it in token requests. If neither PAT nor CLIENT_ID is set, inform the user and stop.
-2. Verify `AZURE_DEVOPS_ORG` and `AZURE_DEVOPS_PROJECT` are set before making any API calls.
-3. Read the appropriate reference file for the endpoint patterns.
-4. Execute curl commands via the Bash tool, substituting environment variables. Use `-u ":$AZURE_DEVOPS_PAT"` for PAT auth or `-H "Authorization: Bearer $ACCESS_TOKEN"` for OAuth.
-5. Parse JSON responses with `jq` when extracting specific fields.
-6. For paginated results, follow `continuationToken` or `x-ms-continuationtoken` headers.
-7. Always include `api-version=7.1` in query parameters.
-8. For POST/PUT/PATCH, set `-H "Content-Type: application/json"` (or `application/json-patch+json` for work item updates).
+1. **Authenticate** — `AzureDevOpsClient.from_env()` then `client.authenticate()` (OAuth2 only). If `from_env()` raises `ValueError`, tell the user which variable is missing and stop.
+2. **Route** — read the appropriate reference file for the user's request.
+3. **Execute** — call methods on the client's service attributes (`client.work_items`, `client.git_repos`, etc.).
+4. **Parse** — extract and present relevant fields from the returned data.
+5. **Paginate** — follow `continuationToken` for paginated results.
+6. **Cleanup** — call `client.close()` or use `with AzureDevOpsClient.from_env() as client:`.

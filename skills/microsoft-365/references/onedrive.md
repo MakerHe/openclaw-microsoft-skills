@@ -1,165 +1,75 @@
-# OneDrive API
+# OneDrive
 
-Base path: `https://graph.microsoft.com/v1.0/me/drive`
+Service: `client.onedrive` — Permissions: `Files.ReadWrite.All`
 
-Permissions: `Files.ReadWrite.All`
+## List Files
 
-## List Files in Root
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/root/children" | jq '.value[] | {name, size, folder: .folder.childCount, lastModifiedDateTime}'
+```python
+result = client.onedrive.list_root()
+result = client.onedrive.list_folder("Documents/Reports")
+result = client.onedrive.list_folder_by_id(item_id)
 ```
 
-## List Files in a Folder
+## Get Metadata
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/root:/{folder-path}:/children" | jq '.value[] | {name, size}'
+```python
+result = client.onedrive.get_metadata("Documents/report.docx")
+result = client.onedrive.get_metadata_by_id(item_id)
 ```
 
-By item ID:
+## Download
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/items/{item-id}/children"
+```python
+data = client.onedrive.download("Documents/report.docx")  # -> bytes
+data = client.onedrive.download_by_id(item_id)             # -> bytes
 ```
 
-## Get File Metadata
+## Upload
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/root:/{file-path}:" | jq '{name, size, webUrl, lastModifiedDateTime}'
-```
+```python
+result = client.onedrive.upload("Documents/report.docx", data=file_bytes)
 
-By item ID:
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/items/{item-id}"
-```
-
-## Download a File
-
-```bash
-curl -s -L -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/root:/{file-path}:/content" -o output-file
-```
-
-By item ID:
-
-```bash
-curl -s -L -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/items/{item-id}/content" -o output-file
-```
-
-## Upload a Small File (< 4 MB)
-
-```bash
-curl -s -X PUT -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/octet-stream" \
-  "https://graph.microsoft.com/v1.0/me/drive/root:/{file-path}:/content" \
-  --data-binary @local-file
-```
-
-## Upload a Large File (> 4 MB) — Create Upload Session
-
-```bash
-# Step 1: Create upload session
-UPLOAD_URL=$(curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/drive/root:/{file-path}:/createUploadSession" \
-  -d '{"item": {"@microsoft.graph.conflictBehavior": "rename"}}' | jq -r '.uploadUrl')
-
-# Step 2: Upload bytes in chunks (e.g., 10 MB chunks)
-FILE_SIZE=$(stat -f%z local-file)
-curl -s -X PUT "$UPLOAD_URL" \
-  -H "Content-Range: bytes 0-$((FILE_SIZE-1))/$FILE_SIZE" \
-  --data-binary @local-file
+# Large files (> 4 MB) — create an upload session
+session = client.onedrive.create_upload_session("Documents/large-file.zip")
 ```
 
 ## Create a Folder
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/drive/root/children" \
-  -d '{
-    "name": "New Folder",
-    "folder": {},
-    "@microsoft.graph.conflictBehavior": "rename"
-  }'
+```python
+result = client.onedrive.create_folder(parent_path="Documents", name="New Folder")
 ```
 
-## Delete a File or Folder
+## Delete
 
-```bash
-curl -s -X DELETE -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/items/{item-id}"
+```python
+result = client.onedrive.delete(item_id)
 ```
 
-## Move/Rename a File
+## Move / Rename / Copy
 
-```bash
-curl -s -X PATCH -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/drive/items/{item-id}" \
-  -d '{
-    "name": "new-name.txt",
-    "parentReference": {"id": "{destination-folder-id}"}
-  }'
+```python
+result = client.onedrive.move_or_rename(item_id, new_name="renamed.txt", parent_id=dest_folder_id)
+result = client.onedrive.copy(item_id, destination_folder_id=dest_folder_id, name="copy.txt")
 ```
 
-## Copy a File
+## Sharing Link
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/drive/items/{item-id}/copy" \
-  -d '{
-    "parentReference": {"id": "{destination-folder-id}"},
-    "name": "copy-of-file.txt"
-  }'
-```
-
-## Create a Sharing Link
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/drive/items/{item-id}/createLink" \
-  -d '{
-    "type": "view",
-    "scope": "organization"
-  }' | jq '.link.webUrl'
+```python
+result = client.onedrive.create_sharing_link(item_id, link_type="view", scope="anonymous")
 ```
 
 Link types: `view`, `edit`, `embed`. Scopes: `anonymous`, `organization`.
 
-## Search Files
+## Search / Recent / Shared
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/root/search(q='keyword')" | jq '.value[] | {name, webUrl}'
+```python
+result = client.onedrive.search("keyword")
+result = client.onedrive.list_recent()
+result = client.onedrive.list_shared_with_me()
 ```
 
-## Get Drive Info
+## Drive Info
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive" | jq '{driveType, quota: {used: .quota.used, total: .quota.total, remaining: .quota.remaining}}'
-```
-
-## List Recent Files
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/recent" | jq '.value[] | {name, lastModifiedDateTime}'
-```
-
-## List Shared with Me
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/drive/sharedWithMe" | jq '.value[] | {name, remoteItem: .remoteItem.webUrl}'
+```python
+result = client.onedrive.get_drive_info()
 ```

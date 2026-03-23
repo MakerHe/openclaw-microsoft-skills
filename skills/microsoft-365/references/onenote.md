@@ -1,133 +1,55 @@
-# OneNote API
+# OneNote
 
-Base path: `https://graph.microsoft.com/v1.0/me/onenote`
+Service: `client.onenote` — Permissions: `Notes.ReadWrite.All`
 
-Permissions: `Notes.ReadWrite.All`
+## Notebooks
 
-## List Notebooks
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/notebooks" | jq '.value[] | {id, displayName, createdDateTime, lastModifiedDateTime}'
+```python
+result = client.onenote.list_notebooks()
+result = client.onenote.get_notebook(notebook_id)
+result = client.onenote.create_notebook("My Notebook")
 ```
 
-## Get a Notebook
+## Sections
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/notebooks/{notebook-id}"
+```python
+result = client.onenote.list_sections(notebook_id)
+result = client.onenote.list_all_sections()
+result = client.onenote.create_section(notebook_id, "New Section")
 ```
 
-## Create a Notebook
+## Pages
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/onenote/notebooks" \
-  -d '{"displayName": "My New Notebook"}'
+```python
+result = client.onenote.list_pages(section_id)
+result = client.onenote.list_all_pages(top=20)
+html = client.onenote.get_page_content(page_id)  # -> str (HTML)
 ```
-
-## List Sections
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/notebooks/{notebook-id}/sections" | jq '.value[] | {id, displayName}'
-```
-
-List all sections across notebooks:
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/sections" | jq '.value[] | {id, displayName, parentNotebook: .parentNotebook.displayName}'
-```
-
-## Create a Section
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/onenote/notebooks/{notebook-id}/sections" \
-  -d '{"displayName": "New Section"}'
-```
-
-## List Pages in a Section
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/sections/{section-id}/pages" | jq '.value[] | {id, title, createdDateTime}'
-```
-
-List all pages:
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/pages?\$top=20&\$orderby=lastModifiedDateTime%20desc" | jq '.value[] | {id, title}'
-```
-
-## Get Page Content
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/pages/{page-id}/content"
-```
-
-This returns HTML content of the page.
 
 ## Create a Page
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: text/html" \
-  "https://graph.microsoft.com/v1.0/me/onenote/sections/{section-id}/pages" \
-  -d '<!DOCTYPE html>
-<html>
-  <head>
-    <title>Page Title</title>
-  </head>
-  <body>
-    <p>Page content goes here.</p>
-  </body>
-</html>'
+```python
+result = client.onenote.create_page(section_id, html_content="""
+<!DOCTYPE html>
+<html><head><title>Page Title</title></head>
+<body><p>Content here.</p></body></html>
+""")
 ```
 
-## Update Page Content
+## Update / Delete / Copy
 
-OneNote pages are updated with PATCH using JSON commands:
-
-```bash
-curl -s -X PATCH -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/onenote/pages/{page-id}/content" \
-  -d '[
-    {
-      "target": "body",
-      "action": "append",
-      "content": "<p>Appended content</p>"
-    }
-  ]'
+```python
+result = client.onenote.update_page(page_id, commands=[
+    {"target": "body", "action": "append", "content": "<p>Appended</p>"}
+])
+result = client.onenote.delete_page(page_id)
+result = client.onenote.copy_page_to_section(page_id, destination_section_id)
 ```
 
-Actions: `append`, `insert`, `prepend`, `replace`.
+Actions for `update_page`: `append`, `insert`, `prepend`, `replace`.
 
-## Delete a Page
+## Section Groups
 
-```bash
-curl -s -X DELETE -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/pages/{page-id}"
-```
-
-## Copy a Page to a Section
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/onenote/pages/{page-id}/copyToSection" \
-  -d '{"id": "{destination-section-id}"}'
-```
-
-## List Section Groups
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/onenote/notebooks/{notebook-id}/sectionGroups" | jq '.value[] | {id, displayName}'
+```python
+result = client.onenote.list_section_groups(notebook_id)
 ```

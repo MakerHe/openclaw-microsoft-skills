@@ -1,105 +1,28 @@
-# Notifications API
+# Notifications
 
-Base: `https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification`
+Service: `client.notifications`
 
 ## Subscriptions
 
-### List My Subscriptions
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscriptions?api-version=7.1"
+```python
+result = client.notifications.list_subscriptions()
+result = client.notifications.get_subscription(subscription_id)
+result = client.notifications.create_subscription(body={...})
+result = client.notifications.update_subscription(subscription_id, body={...})
+client.notifications.delete_subscription(subscription_id)
 ```
 
-### Get a Subscription
+## Event Types / Diagnostics
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscriptions/{subscriptionId}?api-version=7.1"
+```python
+result = client.notifications.list_event_types()
+result = client.notifications.get_diagnostics(subscription_id)
 ```
 
-### Create a Subscription
+## Settings / Subscribers
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscriptions?api-version=7.1" \
-  -d '{
-    "description": "Notify on build failures",
-    "filter": {
-      "type": "Expression",
-      "filterModel": {
-        "clauses": [{
-          "logicalOperator": "",
-          "fieldName": "Build.Result",
-          "operator": "=",
-          "value": "Failed",
-          "index": 1
-        }]
-      }
-    },
-    "channel": {
-      "type": "EmailHtml"
-    },
-    "scope": {
-      "id": "{projectId}"
-    }
-  }'
-```
-
-### Update a Subscription
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PUT -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscriptions/{subscriptionId}?api-version=7.1" \
-  -d '{
-    "status": "disabled"
-  }'
-```
-
-### Delete a Subscription
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X DELETE \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscriptions/{subscriptionId}?api-version=7.1"
-```
-
-## Event Types
-
-### List Event Types
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/eventtypes?api-version=7.1"
-```
-
-## Notification Statistics
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscriptions/{subscriptionId}/diagnostics?api-version=7.1-preview.1"
-```
-
-## Global Notification Settings
-
-```bash
-# Get settings
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/settings?api-version=7.1-preview.1"
-```
-
-## Subscriber (User Notification Settings)
-
-```bash
-# Get subscriber info
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscribers/{subscriberId}?api-version=7.1-preview.1"
-
-# Update subscriber delivery preferences
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/_apis/notification/subscribers/{subscriberId}?api-version=7.1-preview.1" \
-  -d '{"deliveryPreference": "preferredEmailAddress"}'
+```python
+result = client.notifications.get_settings()
+result = client.notifications.get_subscriber(subscriber_id)
+result = client.notifications.update_subscriber(subscriber_id, updates={...})
 ```

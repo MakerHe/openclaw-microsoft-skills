@@ -1,124 +1,43 @@
-# Classic Build API
+# Builds
 
-Base: `https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build`
+Service: `client.builds`
 
-## List Build Definitions
+## Definitions
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/definitions?api-version=7.1"
+```python
+result = client.builds.list_definitions()
+result = client.builds.get_definition(definition_id)
 ```
 
-## Get a Build Definition
+## Queue / List / Get
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/definitions/{definitionId}?api-version=7.1"
+```python
+result = client.builds.queue(definition_id, source_branch="refs/heads/main", parameters={"key": "value"})
+result = client.builds.list(definitions=definition_id, status_filter="completed", top=10)
+result = client.builds.get(build_id)
 ```
 
-## Queue a Build
+## Cancel / Delete / Retain
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds?api-version=7.1" \
-  -d '{
-    "definition": {"id": {definitionId}},
-    "sourceBranch": "refs/heads/main",
-    "parameters": "{\"param1\": \"value1\"}"
-  }'
+```python
+result = client.builds.cancel(build_id)
+client.builds.delete(build_id)
+result = client.builds.retain(build_id, keep_forever=True)
 ```
 
-## List Builds
+## Logs / Timeline
 
-```bash
-# Recent builds
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds?api-version=7.1&\$top=20"
-
-# Builds for a definition
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds?definitions={definitionId}&api-version=7.1"
-
-# Filter by status
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds?statusFilter=completed&resultFilter=failed&api-version=7.1"
+```python
+result = client.builds.list_logs(build_id)
+result = client.builds.get_log(build_id, log_id)
+result = client.builds.get_timeline(build_id)
 ```
 
-Status: `all`, `cancelling`, `completed`, `inProgress`, `none`, `notStarted`, `postponed`.
-Result: `canceled`, `failed`, `none`, `partiallySucceeded`, `succeeded`.
+## Artifacts / Tags
 
-## Get a Build
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}?api-version=7.1"
-```
-
-## Cancel a Build
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}?api-version=7.1" \
-  -d '{"status": "cancelling"}'
-```
-
-## Build Logs
-
-```bash
-# List logs
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}/logs?api-version=7.1"
-
-# Get specific log
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}/logs/{logId}?api-version=7.1"
-```
-
-## Build Timeline (Stages/Jobs/Tasks)
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}/timeline?api-version=7.1"
-```
-
-## Build Artifacts
-
-```bash
-# List artifacts
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}/artifacts?api-version=7.1"
-
-# Get specific artifact
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}/artifacts?artifactName={name}&api-version=7.1"
-```
-
-## Build Tags
-
-```bash
-# List tags
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}/tags?api-version=7.1"
-
-# Add tag
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PUT \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}/tags/{tag}?api-version=7.1"
-```
-
-## Retention
-
-```bash
-# Delete a build
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X DELETE \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}?api-version=7.1"
-
-# Retain a build indefinitely
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/build/builds/{buildId}?api-version=7.1" \
-  -d '{"keepForever": true}'
+```python
+result = client.builds.list_artifacts(build_id)
+result = client.builds.get_artifact(build_id, "drop")
+result = client.builds.list_tags(build_id)
+result = client.builds.add_tag(build_id, "release-candidate")
 ```

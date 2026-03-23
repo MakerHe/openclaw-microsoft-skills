@@ -1,121 +1,49 @@
-# Contacts API
+# Contacts
 
-Base path: `https://graph.microsoft.com/v1.0/me`
+Service: `client.contacts` — Permissions: `Contacts.ReadWrite`
 
-Permissions: `Contacts.ReadWrite`
+## List / Get / Delete
 
-## List Contacts
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contacts?\$top=20" | jq '.value[] | {id, displayName, emailAddresses: [.emailAddresses[].address], mobilePhone}'
-```
-
-With select:
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contacts?\$select=displayName,emailAddresses,businessPhones,companyName&\$top=20"
-```
-
-With search:
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contacts?\$filter=startswith(displayName,'John')"
-```
-
-## Get a Contact
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contacts/{contact-id}"
+```python
+result = client.contacts.list(top=20, select="displayName,emailAddresses", filter="startswith(displayName,'John')")
+result = client.contacts.get(contact_id)
+result = client.contacts.delete(contact_id)
 ```
 
 ## Create a Contact
 
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/contacts" \
-  -d '{
-    "givenName": "John",
-    "surname": "Doe",
-    "emailAddresses": [
-      {"address": "john.doe@example.com", "name": "John Doe"}
-    ],
-    "businessPhones": ["+1-555-0100"],
-    "mobilePhone": "+1-555-0101",
-    "companyName": "Contoso",
-    "jobTitle": "Engineer"
-  }'
+```python
+result = client.contacts.create(
+    given_name="John",
+    surname="Doe",
+    email="john.doe@example.com",
+    phone="+1-555-0100",
+    company="Contoso",
+    job_title="Engineer",
+)
 ```
 
 ## Update a Contact
 
-```bash
-curl -s -X PATCH -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/contacts/{contact-id}" \
-  -d '{
-    "jobTitle": "Senior Engineer",
-    "companyName": "Contoso Ltd"
-  }'
+```python
+result = client.contacts.update(contact_id, updates={"jobTitle": "Senior Engineer"})
 ```
 
-## Delete a Contact
+## Contact Photo
 
-```bash
-curl -s -X DELETE -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contacts/{contact-id}"
+```python
+data = client.contacts.get_photo(contact_id)  # -> bytes
 ```
 
-## Get Contact Photo
+## Contact Folders
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contacts/{contact-id}/photo/\$value" -o contact-photo.jpg
-```
-
-## List Contact Folders
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contactFolders" | jq '.value[] | {id, displayName}'
-```
-
-## Create a Contact Folder
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/contactFolders" \
-  -d '{"displayName": "Vendors"}'
-```
-
-## List Contacts in a Folder
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contactFolders/{folder-id}/contacts" | jq '.value[] | {displayName, emailAddresses}'
-```
-
-## Create a Contact in a Folder
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/contactFolders/{folder-id}/contacts" \
-  -d '{
-    "givenName": "Jane",
-    "surname": "Smith",
-    "emailAddresses": [{"address": "jane@vendor.com"}]
-  }'
-```
-
-## Delete a Contact Folder
-
-```bash
-curl -s -X DELETE -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/contactFolders/{folder-id}"
+```python
+result = client.contacts.list_folders()
+result = client.contacts.create_folder("Vendors")
+result = client.contacts.list_in_folder(folder_id)
+result = client.contacts.create_in_folder(folder_id, contact={
+    "givenName": "Jane", "surname": "Smith",
+    "emailAddresses": [{"address": "jane@vendor.com"}],
+})
+result = client.contacts.delete_folder(folder_id)
 ```

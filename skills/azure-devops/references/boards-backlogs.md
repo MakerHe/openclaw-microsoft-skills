@@ -1,128 +1,38 @@
-# Boards, Backlogs & Sprints API
+# Boards & Backlogs
 
-Base: `https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work`
-
-**Note**: Most board/backlog APIs are team-scoped. Replace `{team}` with the team name or ID.
+Service: `client.boards_backlogs`
 
 ## Boards
 
-### List Boards
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/boards?api-version=7.1"
-```
-
-### Get a Board
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/boards/{boardId}?api-version=7.1"
-```
-
-### Get Board Columns
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/boards/{boardId}/columns?api-version=7.1"
-```
-
-### Update Board Columns
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PUT -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/boards/{boardId}/columns?api-version=7.1" \
-  -d '[
-    {"name": "New", "itemLimit": 0, "stateMappings": {"Bug": "New", "User Story": "New"}},
-    {"name": "Active", "itemLimit": 5, "stateMappings": {"Bug": "Active", "User Story": "Active"}},
-    {"name": "Closed", "itemLimit": 0, "stateMappings": {"Bug": "Closed", "User Story": "Closed"}}
-  ]'
-```
-
-### Get Board Rows (Swimlanes)
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/boards/{boardId}/rows?api-version=7.1"
+```python
+result = client.boards_backlogs.list_boards()
+result = client.boards_backlogs.get_board(board_id)
+result = client.boards_backlogs.get_columns(board_id)
+result = client.boards_backlogs.update_columns(board_id, columns=[...])
+result = client.boards_backlogs.get_rows(board_id)
 ```
 
 ## Backlogs
 
-### List Backlogs
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/backlogs?api-version=7.1"
+```python
+result = client.boards_backlogs.list_backlogs()
+result = client.boards_backlogs.get_backlog_items(backlog_id)
 ```
 
-### Get Backlog Work Items
+## Iterations / Sprints
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/backlogs/{backlogId}/workItems?api-version=7.1"
-```
-
-## Iterations (Sprints)
-
-### List Iterations
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings/iterations?api-version=7.1"
-```
-
-### Get Current Iteration
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings/iterations?\$timeframe=current&api-version=7.1"
-```
-
-### Get Iteration Work Items
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings/iterations/{iterationId}/workitems?api-version=7.1"
-```
-
-### Get Iteration Capacity
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings/iterations/{iterationId}/capacities?api-version=7.1"
-```
-
-### Add Iteration to Team
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings/iterations?api-version=7.1" \
-  -d '{"id": "{iterationId}"}'
+```python
+result = client.boards_backlogs.list_iterations()
+result = client.boards_backlogs.get_current_iteration()
+result = client.boards_backlogs.get_iteration_work_items(iteration_id)
+result = client.boards_backlogs.get_iteration_capacity(iteration_id)
+result = client.boards_backlogs.add_iteration(iteration_id)
 ```
 
 ## Team Settings
 
-```bash
-# Get team settings
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings?api-version=7.1"
-
-# Update team settings
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings?api-version=7.1" \
-  -d '{
-    "backlogIteration": {"id": "{iterationId}"},
-    "bugsBehavior": "asTasks",
-    "workingDays": ["monday", "tuesday", "wednesday", "thursday", "friday"]
-  }'
-```
-
-## Team Field Values (Area Paths)
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/{team}/_apis/work/teamsettings/teamfieldvalues?api-version=7.1"
+```python
+result = client.boards_backlogs.get_settings()
+result = client.boards_backlogs.update_settings(settings={...})
+result = client.boards_backlogs.get_team_field_values()
 ```

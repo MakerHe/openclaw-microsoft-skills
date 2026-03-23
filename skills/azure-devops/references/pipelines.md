@@ -1,131 +1,58 @@
-# Pipelines (YAML) API
+# Pipelines
 
-Base: `https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines`
+Service: `client.pipelines`
 
-## List Pipelines
+## List / Get
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines?api-version=7.1"
-```
-
-## Get a Pipeline
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/{pipelineId}?api-version=7.1"
+```python
+result = client.pipelines.list()
+result = client.pipelines.get(pipeline_id)
 ```
 
 ## Create a Pipeline
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines?api-version=7.1" \
-  -d '{
-    "name": "my-pipeline",
-    "folder": "/",
-    "configuration": {
-      "type": "yaml",
-      "path": "/azure-pipelines.yml",
-      "repository": {
-        "id": "{repoId}",
-        "type": "azureReposGit"
-      }
-    }
-  }'
+```python
+result = client.pipelines.create(
+    name="Build Pipeline",
+    folder="/",
+    repo_id="repo-guid",
+    repo_name="my-repo",
+    yaml_path="/azure-pipelines.yml",
+)
 ```
 
 ## Run a Pipeline
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/{pipelineId}/runs?api-version=7.1" \
-  -d '{
-    "resources": {
-      "repositories": {
-        "self": {
-          "refName": "refs/heads/main"
-        }
-      }
-    },
-    "templateParameters": {
-      "param1": "value1"
-    }
-  }'
+```python
+result = client.pipelines.run(pipeline_id, branch="main", variables={"env": {"value": "prod"}})
 ```
 
-## List Pipeline Runs
+## Runs / Logs
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/{pipelineId}/runs?api-version=7.1"
+```python
+result = client.pipelines.list_runs(pipeline_id)
+result = client.pipelines.get_run(pipeline_id, run_id)
+result = client.pipelines.list_run_logs(pipeline_id, run_id)
+result = client.pipelines.get_run_log(pipeline_id, run_id, log_id)
 ```
 
-## Get a Pipeline Run
+## Preview YAML
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/{pipelineId}/runs/{runId}?api-version=7.1"
+```python
+result = client.pipelines.preview(pipeline_id, branch="main")
 ```
 
-## Get Pipeline Run Log
+## Approvals
 
-```bash
-# List logs
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/{pipelineId}/runs/{runId}/logs?api-version=7.1"
-
-# Get a specific log
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/{pipelineId}/runs/{runId}/logs/{logId}?api-version=7.1"
-```
-
-## Pipeline Approvals
-
-```bash
-# List pending approvals
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/approvals?api-version=7.1-preview.1"
-
-# Approve
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/approvals?api-version=7.1-preview.1" \
-  -d '[{"approvalId": "{approvalId}", "status": "approved", "comment": "Looks good"}]'
+```python
+result = client.pipelines.list_approvals()
+result = client.pipelines.approve(approval_id, comment="LGTM")
 ```
 
 ## Environments
 
-```bash
-# List environments
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/environments?api-version=7.1-preview.1"
-
-# Get environment
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/environments/{environmentId}?api-version=7.1-preview.1"
-
-# Create environment
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/environments?api-version=7.1-preview.1" \
-  -d '{"name": "production", "description": "Production environment"}'
-```
-
-## Pipeline Preview (Dry Run)
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://dev.azure.com/$AZURE_DEVOPS_ORG/$AZURE_DEVOPS_PROJECT/_apis/pipelines/{pipelineId}/preview?api-version=7.1-preview.1" \
-  -d '{
-    "previewRun": true,
-    "resources": {
-      "repositories": {
-        "self": {"refName": "refs/heads/main"}
-      }
-    }
-  }'
+```python
+result = client.pipelines.list_environments()
+result = client.pipelines.get_environment(environment_id)
+result = client.pipelines.create_environment("production", description="Prod env")
 ```

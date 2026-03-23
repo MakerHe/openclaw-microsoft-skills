@@ -1,120 +1,46 @@
-# Users & Groups API
+# Users & Groups
 
-Base path: `https://graph.microsoft.com/v1.0`
+Service: `client.users_groups` — Permissions: `User.Read`, `User.ReadBasic.All`, `Group.Read.All`
 
-Permissions: `User.Read`, `User.ReadBasic.All`, `Group.Read.All`
+## Current User
 
-## Get My Profile
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me" | jq '{displayName, mail, userPrincipalName, jobTitle, department, officeLocation}'
+```python
+result = client.users_groups.get_me()
+data = client.users_groups.get_my_photo()  # -> bytes
 ```
 
-## Get My Photo
+## Users
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/photo/\$value" -o my-photo.jpg
+```python
+result = client.users_groups.get_user(user_id_or_upn)
+result = client.users_groups.list_users(top=20, select="displayName,mail", filter="startswith(displayName,'John')", search="displayName:John")
 ```
 
-## Get a User by ID or UPN
+## Org Hierarchy
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/users/{user-id-or-upn}" | jq '{displayName, mail, jobTitle, department}'
+```python
+result = client.users_groups.get_manager()
+result = client.users_groups.get_direct_reports()
 ```
 
-## List Users
+## Groups
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/users?\$top=20&\$select=displayName,mail,userPrincipalName,jobTitle" | jq '.value[] | {displayName, mail}'
+```python
+result = client.users_groups.list_groups(top=20, filter="startswith(displayName,'Engineering')")
+result = client.users_groups.get_group(group_id)
+result = client.users_groups.list_group_members(group_id)
+result = client.users_groups.list_group_owners(group_id)
 ```
 
-With filter:
+## My Groups / Membership Check
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/users?\$filter=startswith(displayName,'John')&\$select=displayName,mail"
+```python
+result = client.users_groups.list_my_groups()
+result = client.users_groups.check_member_groups(group_ids=["group-id-1", "group-id-2"])
 ```
 
-Search by name:
+## Organization
 
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "ConsistencyLevel: eventual" \
-  "https://graph.microsoft.com/v1.0/users?\$search=%22displayName:John%22&\$count=true&\$select=displayName,mail"
-```
-
-## Get User's Manager
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/manager" | jq '{displayName, mail, jobTitle}'
-```
-
-## Get User's Direct Reports
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/directReports" | jq '.value[] | {displayName, mail, jobTitle}'
-```
-
-## List Groups
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/groups?\$top=20&\$select=displayName,description,groupTypes,mail" | jq '.value[] | {displayName, description, mail}'
-```
-
-With filter:
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/groups?\$filter=startswith(displayName,'Engineering')"
-```
-
-## Get a Group
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/groups/{group-id}" | jq '{displayName, description, mail, groupTypes}'
-```
-
-## List Group Members
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/groups/{group-id}/members" | jq '.value[] | {displayName, mail, "@odata.type"}'
-```
-
-## List My Groups
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/me/memberOf" | jq '.value[] | {displayName, "@odata.type"}'
-```
-
-## Check Member Of
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://graph.microsoft.com/v1.0/me/checkMemberGroups" \
-  -d '{"groupIds": ["{group-id-1}", "{group-id-2}"]}'
-```
-
-## List Group Owners
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/groups/{group-id}/owners" | jq '.value[] | {displayName, mail}'
-```
-
-## Get Organization Info
-
-```bash
-curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
-  "https://graph.microsoft.com/v1.0/organization" | jq '.value[] | {displayName, verifiedDomains}'
+```python
+result = client.users_groups.get_organization()
 ```

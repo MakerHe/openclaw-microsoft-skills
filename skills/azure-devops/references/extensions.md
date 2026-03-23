@@ -1,75 +1,31 @@
-# Extensions Management API
+# Extensions
 
-Base: `https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement`
+Service: `client.extensions`
 
-**Note**: Extension Management uses the `extmgmt.dev.azure.com` host.
+## Installed Extensions
 
-## List Installed Extensions
-
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement/installedextensions?api-version=7.1-preview.1"
+```python
+result = client.extensions.list_installed()
+result = client.extensions.get(publisher_name, extension_name)
 ```
 
-## Get an Installed Extension
+## Install / Uninstall / Enable
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement/installedextensionsbyname/{publisherName}/{extensionName}?api-version=7.1-preview.1"
+```python
+result = client.extensions.install(publisher_name, extension_name, version)
+client.extensions.uninstall(publisher_name, extension_name)
+result = client.extensions.set_enabled(publisher_name, extension_name, enabled=True)
 ```
 
-## Install an Extension
+## Extension Data
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X POST -H "Content-Type: application/json" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement/installedextensionsbyname/{publisherName}/{extensionName}/{version}?api-version=7.1-preview.1"
+```python
+result = client.extensions.get_data_document(publisher_name, extension_name, scope_type, scope_value, collection)
+result = client.extensions.set_data_document(publisher_name, extension_name, scope_type, scope_value, collection, document)
 ```
 
-## Uninstall an Extension
+## Extension Requests
 
-```bash
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X DELETE \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement/installedextensionsbyname/{publisherName}/{extensionName}?api-version=7.1-preview.1"
-```
-
-## Enable/Disable an Extension
-
-```bash
-# Disable
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement/installedextensionsbyname/{publisherName}/{extensionName}?api-version=7.1-preview.1" \
-  -d '{"installState": {"flags": "disabled"}}'
-
-# Enable
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PATCH -H "Content-Type: application/json" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement/installedextensionsbyname/{publisherName}/{extensionName}?api-version=7.1-preview.1" \
-  -d '{"installState": {"flags": "none"}}'
-```
-
-## Extension Data (Storage)
-
-Extensions can store data in the organization:
-
-```bash
-# Get document
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/ExtensionManagement/InstalledExtensions/{publisherName}/{extensionName}/Data/Scopes/Default/Current/Collections/{collectionName}/Documents/{documentId}?api-version=7.1-preview.1"
-
-# Create/update document
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  -X PUT -H "Content-Type: application/json" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/ExtensionManagement/InstalledExtensions/{publisherName}/{extensionName}/Data/Scopes/Default/Current/Collections/{collectionName}/Documents?api-version=7.1-preview.1" \
-  -d '{"id": "doc1", "key": "value"}'
-```
-
-## Requests (Pending Installs)
-
-```bash
-# List extension requests
-curl -s -u ":$AZURE_DEVOPS_PAT" \
-  "https://extmgmt.dev.azure.com/$AZURE_DEVOPS_ORG/_apis/extensionmanagement/requests?api-version=7.1-preview.1"
+```python
+result = client.extensions.list_requests()
 ```
