@@ -15,7 +15,7 @@ pip install openclaw-microsoft-m365
 
 ## Authentication
 
-Environment variables are stored in `~/.openclaw/.env` (read automatically by `from_env()`). Login tokens are persisted in `~/.openclaw/.credentials/`.
+Environment variables are stored in `~/.openclaw/.env` (read automatically by `from_env()`). Login tokens are persisted in `~/.openclaw/credentials/`.
 
 | Variable | Required | Description |
 |----------|----------|-------------|

@@ -19,7 +19,7 @@ _GRAPH_HOST = "graph.microsoft.com"
 _ADO_HOST = "dev.azure.com"
 _VSSPS_HOST = "vssps.visualstudio.com"
 
-_CREDENTIALS_DIR = Path.home() / ".openclaw" / ".credentials"
+_CREDENTIALS_DIR = Path.home() / ".openclaw" / "credentials"
 
 # Credential file names
 _REFRESH_TOKEN_FILE = "refresh_token.json"
@@ -44,7 +44,7 @@ class RefreshResult(NamedTuple):
 class DeviceCodeAuth(httpx.Auth):
     """httpx-compatible auth that uses Device Code Flow to obtain Bearer tokens.
 
-    Credential files in ``~/.openclaw/.credentials/``:
+    Credential files in ``~/.openclaw/credentials/``:
     - ``refresh_token.json``  — shared refresh token (all resources)
     - ``microsoft365.json``   — Graph access token
     - ``azuredevops.json``    — Azure DevOps access token
