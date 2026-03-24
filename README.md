@@ -48,7 +48,7 @@ AZURE_DEVOPS_PROJECT=your-project-name
 ```
 
 ```bash
-mkdir -p ~/.openclaw/.credentials
+mkdir -p ~/.openclaw/credentials
 chmod 600 ~/.openclaw/.env
 ```
 
@@ -83,14 +83,14 @@ with AzureDevOpsClient.from_env() as client:
     print(projects["value"])
 ```
 
-Tokens are saved to `~/.openclaw/.credentials/`. Subsequent calls refresh silently.
+Tokens are saved to `~/.openclaw/credentials/`. Subsequent calls refresh silently.
 
 ## Credentials Layout
 
 ```
 ~/.openclaw/
 ├── .env
-└── .credentials/
+└── credentials/
     ├── microsoft365.json
     ├── azuredevops.json
     └── refresh_token.json
